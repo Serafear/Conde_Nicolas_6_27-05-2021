@@ -1,6 +1,6 @@
 /*Ici on s'occupera de la construction de la partie serveur */
-/* 5- importation du paquet node https */
-const https = require("https");
+/* 5- importation du paquet node http */
+const http = require("http");
 
 /* 6- On importe app depuis app.js */
 const app = require("./app");
@@ -46,7 +46,7 @@ const errorHandler = (error) => {
 };
 
 /* 8- On crée effectivement le serveur */
-const server = https.createServer(app);
+const server = http.createServer(app);
 
 /* 9-On crée un écouteur d'évènement consignant le port ou 
   le canal nommé sur lequel le serveur s'exécute dans la console */

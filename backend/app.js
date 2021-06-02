@@ -12,24 +12,9 @@ incluse dans le "dependencies" du package.json
 /* 2- une fois express installé, on passe bien sur à sa création */
 const express = require("express");
 
-/* 3- une fois express crée on passe bien sur à son appel à travers la création de la const app*/
-const app = express();
 
 
 
-/* 10- Pour gérer les requêtes HTTP POST dans Express.js version 4 et supérieure, 
-vous devez installer le module middleware appelé body-parser. 
-la commande est : npm install --save body-parser
-On appelera ensuite la fonction avec un const
-Noote importante. L'installation de body-parser a montrer 41 vulnérabilités 
-Selon l'Owasp c'est un cas de : utilisation de composants contenant des vulnérabilités connues.
-Il faudrait donc trouver un moyen de réduire ces vulnérabilités à 0. Body-parser est inutile ? 
-Il semple qu'express vient avec body-parser depuis la version 4.16 ? car la dernière mise à jour de 
-b-p date de 2019. 
-
-ON PEUT UTILISER: app.use(express.json());
-*/
-app.use(express.json());
 
 /* 12- On install mongoose: npm install --save mongoose, pour gérer la
 B.D. mongoDB. Ensuite ont la délcare */
@@ -41,19 +26,30 @@ le second : pssword: DisgustinglyhorrifyingS1r
             nom: minion
 */
 
+/* 44- on importe path pour que le serveur puisse gérer les dépots d'images ensuite on 
+déclare : app.use('/images', express.static(path.join(__dirname, 'images')));
+ */
+const path = require('path');
+
+/* 46-On importe les routes */
+const sauceRoutes = require('./routes/sauce');
+const userRoutes = require('./routes/user');
+
+/* 3- une fois express crée on passe bien sur à son appel à travers la création de la const app*/
+const app = express();
+
 /* 13-on importe mangoose pour pouvoir créer une connexion avec la base de donnée */
 mongoose
   .connect(
     "mongodb+srv://megamind:ImaginethemosthorribleterrifyingevilthingyoucanpossiblythinkofandmultiplyitBY6!!!@cluster0.b5w2l.mongodb.net/pekockoDatabase?retryWrites=true&w=majority",
-    
+
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(() => console.log("Connexion à MongoDB réussie !"))
   .catch(() => console.log("Connexion à MongoDB échouée !"));
 /*première étape pour utiliser mongoose pour créer une interface avec la bd
 mongodb c'est d créer un schéma/modèle de données pour enregistrer/lire/modifier/etc...
-les objets qui sont en vente dans notre base de données. Le modèle qu'on va créer doit réfléter 
-les champs crées dans const stuff plus bas. On va commencer par créer
+les objets qui sont en vente dans notre base de données. On va commencer par créer
 un dossier models et un Thing.js
 */
 
@@ -72,6 +68,51 @@ app.use((req, res, next) => {
     ); //permet d'envoyer des requêtes avec les méthodes mentionnées ( GET ,POST , etc.).
     next();
   });
+
+/* 10- Pour gérer les requêtes HTTP POST dans Express.js version 4 et supérieure, 
+vous devez installer le module middleware appelé body-parser. 
+la commande est : npm install --save body-parser
+On appelera ensuite la fonction avec un const
+Noote importante. L'installation de body-parser a montrer 41 vulnérabilités 
+Selon l'Owasp c'est un cas de : utilisation de composants contenant des vulnérabilités connues.
+Il faudrait donc trouver un moyen de réduire ces vulnérabilités à 0. Body-parser est inutile ? 
+Il semple qu'express vient avec body-parser depuis la version 4.16 ? car la dernière mise à jour de 
+b-p date de 2019. 
+
+ON PEUT UTILISER: app.use(express.json());
+*/
+app.use(express.json());
+
+  /* 45- */
+  app.use('/images', express.static(path.join(__dirname, 'images')));
+
+  /* 47- c'est ici que l'extension api/ utilisée par le router sera mise en place
+  et on dit que pour cette route la on utilise le router exposé par stuffRoutes */
+  app.use('/api/sauces', sauceRoutes);
+  app.use('/api/auth', userRoutes);
+
+  /* 48- */
+  //pour que l'utilisateur puisse modifier les données c'est put
+app.put('/api/sauces/:id', (req,res,next) => {
+  Thing.updateOne({_id: req.params.id}, {...req.body, _id: req.params.id}/*la nouvelle version de l'objet vu qu'il y a update*/)
+  .then(() => res.status(200).json({ message: ''}))
+  .catch((error) => res.status(400).json({ error }));
+});
+
+//pour que l'utilisateur puisse supprimer les données c'est delete
+app.delete('/api/sauces/:id', (req,res,next) => {
+  Thing.deleteOne({_id: req.params.id})
+  .then(() => res.status(200).json({ message: ''}))
+  .catch((error) => res.status(400).json({ error }));
+});
+
+//pour trouver un seul objet par son identifiant/id. le : dit à exxpress que cette partie de la route est dynamique
+app.get('/api/sauces/:id', (req,res,next) => {
+  Thing.findOne({ _id: req.params.id/*paramètre de route dynamique*/})
+  .then((thing) => res.status(200).json(thing))
+  .catch((error) => res.status(404).json({ error }));
+});
+
 
 /* 4- on crée la fonction qui permettra d'exporter app/express dans les autres fichiers js */
 module.exports = app;
